@@ -30,7 +30,7 @@ func (apiCfg *apiConfig) HandlerCreateFeed(w http.ResponseWriter, r *http.Reques
 		UpdatedAt: time.Now().UTC(),
 		Name:      params.Name,
 		Url:       params.URL,
-		UserId:    user.ID,
+		UserID:    user.ID,
 	})
 	if err != nil {
 		RespondWithError(w, 500, "Error creating feed")
@@ -40,6 +40,11 @@ func (apiCfg *apiConfig) HandlerCreateFeed(w http.ResponseWriter, r *http.Reques
 	RespondWithJSON(w, 201, DatabaseFeedtoFeed(feed))
 }
 
-func (apiCfg *apiConfig) HandlerGetFeed(w http.ResponseWriter, r *http.Request, feed database.Feed) {
-	RespondWithJSON(w, 200, DatabaseFeedtoFeed(feed))
-}
+// func HandlerGetFeed(apiCfg *config.ApiConfg, w http.ResponseWriter, r *http.Request) {
+// 	feeds, err := apiCfg.DB.GetFeed(r.Context())
+// 	if err != nil {
+// 		RespondWithError(w, 400, fmt.Sprintln("Error while getting feeds in HandlerGetFeed func", err))
+// 	}
+
+// 	RespondWithJSON(w, 201, models.DatabaseFeedsToStructFeeds(feeds))
+// }

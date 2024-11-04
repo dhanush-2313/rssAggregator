@@ -22,7 +22,6 @@ func (apiCfg *apiConfig) MiddlewareAuth(handler authedHandler) http.HandlerFunc 
 			RespondWithError(w, 500, "Error getting user")
 			return
 		}
-		RespondWithJSON(w, 200, DatabaseUsertoUser(user))
 		handler(w, r, user)
 	}
 }
