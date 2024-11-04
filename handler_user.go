@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dhanush-2313/rssAggregator/internal/auth"
 	"github.com/dhanush-2313/rssAggregator/internal/database"
 	"github.com/google/uuid"
 )
 
-func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) HandlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Name string `json:"name"`
 	}
@@ -34,5 +35,21 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	RespondWithJSON(w, 201, DatabaseUsertoUser(user))
+}
+
+func (apiCfg *apiConfig) HandlerGetUser(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		RespondWithError(w, 403, "Unauthorized")
+		return
+	}
+
+	user, err := apiCfg.DB.GetUserByApiKey(r.Context(), apiKey)
+	if err != nil {
+		RespondWithError(w, 500, "Error getting user")
+		return
+	}
 	RespondWithJSON(w, 200, DatabaseUsertoUser(user))
+
 }
