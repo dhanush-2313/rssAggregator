@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"time"
@@ -90,7 +90,7 @@ type Post struct {
 	FeedID      uuid.UUID `json:"feed_id"`
 }
 
-func databasePostToPost(dbPost database.Post) Post {
+func DatabasePostToPost(dbPost database.Post) Post {
 	var description *string
 	if dbPost.Description.Valid {
 		description = &dbPost.Description.String
@@ -107,10 +107,10 @@ func databasePostToPost(dbPost database.Post) Post {
 	}
 }
 
-func databasePostsToPosts(dbPosts []database.Post) []Post {
+func DatabasePostsToPosts(dbPosts []database.Post) []Post {
 	posts := []Post{}
 	for _, dbPost := range dbPosts {
-		posts = append(posts, databasePostToPost(dbPost))
+		posts = append(posts, DatabasePostToPost(dbPost))
 	}
 	return posts
 }

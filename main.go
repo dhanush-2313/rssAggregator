@@ -1,23 +1,21 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/dhanush-2313/rssAggregator/internal/database"
+	config "github.com/dhanush-2313/rssAggregator/config"
+	handlers "github.com/dhanush-2313/rssAggregator/handlers"
+	middleware "github.com/dhanush-2313/rssAggregator/middleware"
+	utils "github.com/dhanush-2313/rssAggregator/utils"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 
 	_ "github.com/lib/pq"
 )
-
-type apiConfig struct {
-	DB *database.Queries
-}
 
 func main() {
 
@@ -35,22 +33,13 @@ func main() {
 		log.Fatal("DB_URL not found!")
 	}
 
-	conn, err := sql.Open("postgres", dbUrl)
-	if err != nil {
-		log.Fatal("Cant connect to DATABASE!")
-	}
+	apiCfg := config.ConnectDB(dbUrl)
 
-	db := database.New(conn)
-	apiCfg := apiConfig{
-		DB: db,
-	}
-
-	go startScraping(
-		db,
+	go utils.StartScraping(
+		apiCfg.DB,
 		10,
 		time.Minute,
 	)
-
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
@@ -64,19 +53,21 @@ func main() {
 
 	v1Router := chi.NewRouter()
 
-	v1Router.Get("/health", HandlerReadiness)
-	v1Router.Get("/err", HandleErr)
-	v1Router.Post("/users", apiCfg.HandlerCreateUser)
-	v1Router.Get("/users", apiCfg.MiddlewareAuth(apiCfg.HandlerGetUser))
+	v1Router.Get("/health", handlers.HandlerReadiness)
+	v1Router.Get("/err", handlers.HandleErr)
+	v1Router.Post("/users", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandlerCreateUser(apiCfg, w, r)
+	})
+	v1Router.Get("/users", middleware.MiddlewareAuth(apiCfg, handlers.HandlerGetUser))
 
-	v1Router.Post("/feeds", apiCfg.MiddlewareAuth(apiCfg.HandlerCreateFeed))
-	v1Router.Get("/feeds", apiCfg.MiddlewareAuth(apiCfg.HandlerGetFeed))
+	v1Router.Post("/feeds", middleware.MiddlewareAuth(apiCfg, handlers.HandlerCreateFeed))
+	v1Router.Get("/feeds", middleware.MiddlewareAuth(apiCfg, handlers.HandlerGetFeed))
 
-	v1Router.Get("/posts", apiCfg.MiddlewareAuth(apiCfg.HandlerGetPostsForUser))
+	v1Router.Get("/posts", middleware.MiddlewareAuth(apiCfg, handlers.HandlerGetPostsForUser))
 
-	v1Router.Post("/feed_follows", apiCfg.MiddlewareAuth(apiCfg.HandlerCreateFeedFollow))
-	v1Router.Get("/feed_follows", apiCfg.MiddlewareAuth(apiCfg.HandlerGetFeedFollow))
-	v1Router.Delete("/feed_follows/{feedFollowID}", apiCfg.MiddlewareAuth(apiCfg.HandlerDeleteFeedFollow))
+	v1Router.Post("/feed_follows", middleware.MiddlewareAuth(apiCfg, handlers.HandlerCreateFeedFollow))
+	v1Router.Get("/feed_follows", middleware.MiddlewareAuth(apiCfg, handlers.HandlerGetFeedFollow))
+	v1Router.Delete("/feed_follows/{feedFollowID}", middleware.MiddlewareAuth(apiCfg, handlers.HandlerDeleteFeedFollow))
 
 	router.Mount("/v1", v1Router)
 
@@ -86,7 +77,7 @@ func main() {
 	}
 
 	log.Println("Server is running on port: ", portString)
-	err = srv.ListenAndServe()
+	err := srv.ListenAndServe()
 
 	if err != nil {
 		log.Fatal(err)

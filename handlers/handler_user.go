@@ -1,15 +1,18 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"net/http"
 	"time"
 
+	config "github.com/dhanush-2313/rssAggregator/config"
+	models "github.com/dhanush-2313/rssAggregator/models"
+
 	"github.com/dhanush-2313/rssAggregator/internal/database"
 	"github.com/google/uuid"
 )
 
-func (apiCfg *apiConfig) HandlerCreateUser(w http.ResponseWriter, r *http.Request) {
+func HandlerCreateUser(apiCfg *config.ApiConfig, w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Name string `json:"name"`
 	}
@@ -34,14 +37,14 @@ func (apiCfg *apiConfig) HandlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	RespondWithJSON(w, 201, DatabaseUsertoUser(user))
+	RespondWithJSON(w, 201, models.DatabaseUsertoUser(user))
 }
 
-func (apiCfg *apiConfig) HandlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
-	RespondWithJSON(w, 200, DatabaseUsertoUser(user))
+func HandlerGetUser(apiCfg *config.ApiConfig, w http.ResponseWriter, r *http.Request, user database.User) {
+	RespondWithJSON(w, 200, models.DatabaseUsertoUser(user))
 }
 
-func (apiCfg *apiConfig) HandlerGetPostsForUser(w http.ResponseWriter, r *http.Request, user database.User) {
+func HandlerGetPostsForUser(apiCfg *config.ApiConfig, w http.ResponseWriter, r *http.Request, user database.User) {
 	posts, err := apiCfg.DB.GetPostsForUser(r.Context(), database.GetPostsForUserParams{
 		UserID: user.ID,
 		Limit:  10,
@@ -51,5 +54,5 @@ func (apiCfg *apiConfig) HandlerGetPostsForUser(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	RespondWithJSON(w, 200, databasePostsToPosts(posts))
+	RespondWithJSON(w, 200, posts)
 }
