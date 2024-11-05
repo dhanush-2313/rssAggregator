@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -40,11 +41,11 @@ func (apiCfg *apiConfig) HandlerCreateFeed(w http.ResponseWriter, r *http.Reques
 	RespondWithJSON(w, 201, DatabaseFeedtoFeed(feed))
 }
 
-// func HandlerGetFeed(apiCfg *config.ApiConfg, w http.ResponseWriter, r *http.Request) {
-// 	feeds, err := apiCfg.DB.GetFeed(r.Context())
-// 	if err != nil {
-// 		RespondWithError(w, 400, fmt.Sprintln("Error while getting feeds in HandlerGetFeed func", err))
-// 	}
+func (apiCfg *apiConfig) HandlerGetFeed(w http.ResponseWriter, r *http.Request, user database.User) {
+	feeds, err := apiCfg.DB.Getfeeds(r.Context())
+	if err != nil {
+		RespondWithError(w, 400, fmt.Sprintln("Error while getting feeds in HandlerGetFeed func", err))
+	}
 
-// 	RespondWithJSON(w, 201, models.DatabaseFeedsToStructFeeds(feeds))
-// }
+	RespondWithJSON(w, 201, DatabaseFeedsToStructFeeds(feeds))
+}
